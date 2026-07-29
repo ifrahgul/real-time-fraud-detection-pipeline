@@ -3,7 +3,6 @@ Step 3b: Kafka Consumer — Real-Time Fraud Scoring
 ====================================================
 
 """
-
 import os
 import json
 import time
