@@ -1,5 +1,18 @@
 # Real-Time Fraud Detection Pipeline
 
+![Python](https://img.shields.io/badge/Python-3.x-blue)
+![Kafka](https://img.shields.io/badge/Apache%20Kafka-Streaming-black)
+![FastAPI](https://img.shields.io/badge/FastAPI-API-teal)
+![XGBoost](https://img.shields.io/badge/XGBoost-ML%20Model-orange)
+![Feast](https://img.shields.io/badge/Feast-Feature%20Store-green)
+![SHAP](https://img.shields.io/badge/SHAP-Explainability-red)
+![Redis](https://img.shields.io/badge/Redis-Online%20Store-dc382d)
+![SQLite](https://img.shields.io/badge/SQLite-Feedback%20Store-lightgrey)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
+![MLOps](https://img.shields.io/badge/MLOps-Closed%20Loop-purple)
+
+**Tags:** `fraud-detection` `real-time` `streaming` `kafka` `xgboost` `feast` `feature-store` `shap` `explainable-ai` `drift-detection` `fastapi` `redis` `sqlite` `docker` `mlops` `machine-learning`
+
 A closed-loop, streaming fraud detection system for e-commerce and finance —
 transactions are scored in milliseconds as they happen, not hours later in a
 batch job.
