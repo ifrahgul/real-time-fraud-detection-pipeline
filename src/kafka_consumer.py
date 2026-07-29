@@ -1,23 +1,8 @@
 """
 Step 3b: Kafka Consumer — Real-Time Fraud Scoring
 ====================================================
-Yeh script Kafka topic 'transactions' se continuously transactions
-utha kar humari FastAPI '/predict' endpoint ko call karti hai, aur
-result ke hisaab se decision leti hai (block/review/allow).
 
-Extended: har prediction ab feedback.py ke through log hoti hai
-(transaction_id, features, score, decision) — taake baad mein
-/feedback endpoint se ground-truth label attach ki ja sake aur
-retraining dataset banaya ja sake. user_id aur model latency bhi
-features ke andar log hoti hain taake live dashboard unhe dikha sake.
-
-Chalane se pehle:
-    pip install kafka-python requests
-
-Chalane ka tareeqa (Kafka aur FastAPI dono chalne chahiye):
-    python kafka_consumer.py
 """
-
 import os
 import json
 import time
@@ -26,8 +11,8 @@ from kafka import KafkaConsumer
 from feature_store import FeatureStore
 from feedback import FeedbackStore
 
-# Docker ke andar in dono ko environment variables se override kiya jata hai
-# (docker-compose.yml dekhein) — local run mein defaults (localhost) use hote hain.
+# Inside Docker, these two are overridden via environment variables
+# (see docker-compose.yml) — for local runs, the defaults (localhost) are used.
 KAFKA_BROKER = os.environ.get("KAFKA_BROKER", "localhost:9092")
 API_URL = os.environ.get("API_URL", "http://127.0.0.1:8000/predict")
 TOPIC = "transactions"
@@ -36,7 +21,7 @@ consumer = KafkaConsumer(
     TOPIC,
     bootstrap_servers=KAFKA_BROKER,
     value_deserializer=lambda v: json.loads(v.decode("utf-8")),
-    auto_offset_reset="latest",   # sirf naye messages padhega, purane skip
+    auto_offset_reset="latest",   # only reads new messages, skips old ones
     enable_auto_commit=True,
     group_id="fraud-detection-consumer-group",
 )
@@ -47,9 +32,8 @@ feedback_store = FeedbackStore()
 
 def score_transaction(txn):
     """
-    Transaction ko API ko bhejta hai aur fraud score wapas laata hai.
-    transaction_id aur user_id ko API ko nahi bhejta (model in features
-    ko nahi jaanta, yeh sirf humare rule-engine ke liye hain).
+    Sends the transaction to the API, excluding transaction_id and user_id
+    (the model doesn't know about these features, they're only for our rule engine).
     """
     payload = {k: v for k, v in txn.items() if k not in ("transaction_id", "user_id")}
 
@@ -63,26 +47,26 @@ def score_transaction(txn):
 
 def hybrid_decision(ml_result, behavior_features):
     """
-    ML score + behavioral rules ko combine karta hai (Step 6 ka
+    Combines ML score + behavioral rules (Step 6's
     hybrid decision engine architecture).
 
     Rules:
-    - ML score high (>=0.9)                         -> BLOCK
-    - ML score medium (>=0.6) ya behavior suspicious -> REVIEW
-    - warna                                          -> ALLOW
+    - ML score high (>=0.9)                          -> BLOCK
+    - ML score medium (>=0.6) or behavior suspicious  -> REVIEW
+    - otherwise                                       -> ALLOW
     """
     ml_score = ml_result["fraud_probability"]
     rule_flag = behavior_features["velocity_flag"] or behavior_features["amount_spike_flag"]
 
     if ml_score >= 0.9:
         decision = "block"
-        reason = "ML model ne high confidence fraud detect kiya"
+        reason = "ML model shows high confidence score"
     elif ml_score >= 0.6:
         decision = "review"
-        reason = "ML model ne medium confidence fraud detect kiya"
+        reason = "ML model detected medium score"
     elif rule_flag and ml_score >= 0.3:
         decision = "review"
-        reason = "Behavior suspicious hai (velocity/amount spike) + ML score borderline"
+        reason = "Behavior is suspicious (velocity/amount spike) + ML score borderline"
     else:
         decision = "allow"
         reason = "Normal transaction"
@@ -94,7 +78,7 @@ def run_consumer():
     print(f"[CONSUMER] Kafka broker: {KAFKA_BROKER}, Topic: {TOPIC}")
     print(f"[CONSUMER] API endpoint: {API_URL}")
     print(f"[CONSUMER] Feature store (Redis) connected: {feature_store.health_check()}")
-    print("[CONSUMER] Transactions sunna shuru... (Ctrl+C se rokein)\n")
+    print("[CONSUMER] Starting to listen for transactions... (Ctrl+C to stop)\n")
 
     blocked_count = 0
     review_count = 0
@@ -109,26 +93,26 @@ def run_consumer():
 
             start = time.perf_counter()
 
-            # 1. ML model se score lein
+            # 1. Get score from the ML model
             ml_result = score_transaction(txn)
             if "error" in ml_result:
                 print(f"[ERROR] txn_id={transaction_id} -> {ml_result['error']}")
                 continue
 
-            # 2. Behavioral features nikaalein (is transaction se pehle ka history)
+            # 2. Extract behavioral features (history prior to this transaction)
             behavior = feature_store.get_features(user_id, amount)
 
-            # 3. Hybrid decision lein (ML + Rules)
+            # 3. Make the hybrid decision (ML + Rules)
             decision, reason = hybrid_decision(ml_result, behavior)
 
-            # 4. Ab is transaction ko history mein record karein (agli baar ke liye)
+            # 4. Now record this transaction in history (for next time)
             feature_store.record_transaction(user_id, amount)
 
-            # 5. Prediction ko feedback store mein log karein — taake baad mein
-            #    ground-truth label attach ki ja sake aur retrain dataset bane.
-            #    user_id aur model ka apna latency_ms bhi features ke andar rakhte
-            #    hain (dashboard mein dikhane ke liye) — model ko yeh nahi bheje jate,
-            #    sirf logging ke baad add hote hain.
+            # 5. Log the prediction in the feedback store — so a
+            #    ground-truth label can be attached later and a retrain dataset built.
+            #    We also keep user_id and the model's own latency_ms inside the features
+            #    (for showing in the dashboard) — these aren't sent to the model,
+            #    they're only added after logging.
             log_features = {k: v for k, v in txn.items() if k != "transaction_id"}
             log_features.update(behavior)
             log_features["_latency_ms"] = ml_result.get("latency_ms")
@@ -161,7 +145,7 @@ def run_consumer():
             )
 
     except KeyboardInterrupt:
-        print("\n[CONSUMER] Rok diya gaya.")
+        print("\n[CONSUMER] Stopped.")
         print(f"Summary -> Blocked: {blocked_count}, Review: {review_count}, Allowed: {allowed_count}")
         consumer.close()
 

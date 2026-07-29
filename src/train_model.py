@@ -1,16 +1,16 @@
 """
 Step 1: Fraud Detection Model Training
 ========================================
-Yeh script Kaggle 'Credit Card Fraud Detection' dataset par XGBoost model
-train karti hai. Agar dataset nahi mila to yeh khud synthetic fraud data
-generate kar leti hai taake aap turant test kar sakein.
+This script trains an XGBoost model on the Kaggle 'Credit Card Fraud
+Detection' dataset. If the dataset isn't found, it generates its own
+synthetic fraud data so you can test right away.
 
-Extended: training ke baad ek drift baseline bhi save karti hai (PSI ke
-liye) — taake production mein feature drift detect kiya ja sake.
+Extended: after training, it also saves a drift baseline (for PSI)
+so that feature drift can be detected in production.
 
-Real dataset download karne ke liye (recommended):
+To download the real dataset (recommended):
     https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud
-    -> creditcard.csv ko is folder mein rakh dein.
+    -> place creditcard.csv in this folder.
 """
 
 import os
@@ -34,8 +34,8 @@ from drift_monitor import DriftMonitor
 
 import os as _os
 
-# Yeh script src/ folder ke andar se chalti hai, isliye paths ko
-# ek level upar (project root) ke data/ aur models/ folders se link kiya hai.
+# This script runs from inside the src/ folder, so paths are linked
+# one level up (project root) to the data/ and models/ folders.
 BASE_DIR = _os.path.dirname(_os.path.abspath(__file__))
 PROJECT_ROOT = _os.path.dirname(BASE_DIR)
 
@@ -53,24 +53,24 @@ RANDOM_STATE = 42
 
 
 # ---------------------------------------------------------
-# 1. DATA LOADING (real dataset ya synthetic fallback)
+# 1. DATA LOADING (real dataset or synthetic fallback)
 # ---------------------------------------------------------
 def load_data():
     if os.path.exists(DATA_PATH):
-        print(f"[INFO] Real dataset mil gaya: {DATA_PATH}")
+        print(f"[INFO] Real dataset found: {DATA_PATH}")
         df = pd.read_csv(DATA_PATH)
     else:
-        print("[WARNING] creditcard.csv nahi mila. Synthetic dataset generate kar rahe hain "
-              "taake aap pipeline turant test kar sakein. Real accuracy ke liye Kaggle se "
-              "asli dataset download kar ke is folder mein rakhein.")
+        print("[WARNING] creditcard.csv not found. Generating a synthetic dataset "
+              "so you can test the pipeline right away. For real accuracy, download "
+              "the actual dataset from Kaggle and place it in this folder.")
         df = generate_synthetic_data(n_samples=50000, fraud_ratio=0.0017)
     return df
 
 
 def generate_synthetic_data(n_samples=50000, fraud_ratio=0.0017):
     """
-    Kaggle dataset jaisa structure: Time, Amount, V1-V28 (PCA features), Class
-    Fraud transactions ko thora shift kiya gaya hai taake model kuch seekh sake.
+    Structure similar to the Kaggle dataset: Time, Amount, V1-V28 (PCA features), Class.
+    Fraud transactions are shifted slightly so the model has something to learn.
     """
     rng = np.random.default_rng(RANDOM_STATE)
     n_fraud = max(int(n_samples * fraud_ratio), 20)
@@ -124,7 +124,7 @@ def split_data(X, y):
 
 
 # ---------------------------------------------------------
-# 4. MODEL TRAINING (class imbalance handle karte hue)
+# 4. MODEL TRAINING (handling class imbalance)
 # ---------------------------------------------------------
 def train_model(X_train, y_train):
     fraud_count = y_train.sum()
@@ -151,7 +151,7 @@ def train_model(X_train, y_train):
 
 
 # ---------------------------------------------------------
-# 5. EVALUATION (accuracy nahi, precision/recall/F1 dekhte hain)
+# 5. EVALUATION (looking at precision/recall/F1, not accuracy)
 # ---------------------------------------------------------
 def evaluate_model(model, X_test, y_test):
     y_pred = model.predict(X_test)
@@ -249,8 +249,8 @@ def main():
     print("\n[STEP 7] Saving drift baseline...")
     save_drift_baseline(df)
 
-    print("\n✅ Step 1 complete! Ab aapke paas ek trained fraud detection model hai.")
-    print("   Next step: is model ko FastAPI ke zariye ek prediction endpoint banayenge.")
+    print("\n✅ Step 1 complete! You now have a trained fraud detection model.")
+    print("   Next step: expose this model through a FastAPI prediction endpoint.")
 
 
 if __name__ == "__main__":

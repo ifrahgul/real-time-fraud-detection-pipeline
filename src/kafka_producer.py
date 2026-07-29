@@ -1,16 +1,15 @@
 """
 Step 3a: Kafka Producer — Transaction Stream Simulator
 =========================================================
-Yeh script continuously fake transactions generate kar ke Kafka topic
-'transactions' mein bhejti hai — jaise real e-commerce site karti hai.
+This script continuously generates fake transactions and sends them to the
+Kafka topic 'transactions' — just like a real e-commerce site would.
 
-Chalane se pehle:
+Before running:
     pip install kafka-python
 
-Chalane ka tareeqa (docker compose already 'up' hona chahiye):
+How to run (docker compose should already be 'up'):
     python kafka_producer.py
 """
-
 import os
 import json
 import time
@@ -32,28 +31,27 @@ producer = KafkaProducer(
 )
 
 # ---------------------------------------------------------
-# Real dataset se asal fraud/normal rows load karte hain
-# (agar mile), taake demo mein real fraud sahi score ho.
+# Load actual fraud/normal rows from the real dataset
+# (if available), so the demo scores real fraud correctly.
 # ---------------------------------------------------------
 _real_fraud_rows = None
 _real_normal_rows = None
-
 if os.path.exists(DATA_PATH):
-    print(f"[PRODUCER] Real dataset mil gaya, real transactions use hongi: {DATA_PATH}")
+    print(f"[PRODUCER] Real dataset found, using real transactions: {DATA_PATH}")
     _df = pd.read_csv(DATA_PATH)
     _real_fraud_rows = _df[_df["Class"] == 1].drop(columns=["Class"]).to_dict("records")
     _real_normal_rows = _df[_df["Class"] == 0].drop(columns=["Class"]).to_dict("records")
 else:
-    print("[PRODUCER] creditcard.csv nahi mila -> synthetic random data use hogi "
-          "(fraud jaisi transactions ka score kam ho sakta hai, kyunke random noise "
-          "asal fraud pattern se match nahi karta).")
+    print("[PRODUCER] creditcard.csv not found -> using synthetic random data "
+          "(fraud-like transactions may score lower, since random noise "
+          "doesn't match real fraud patterns).")
 
 
 def generate_transaction(force_fraud=False):
     """
-    Ek transaction banata hai. Agar real dataset available hai, to
-    asal fraud/normal row utha kar bhejta hai (behtar demo ke liye).
-    Warna synthetic (random) data generate karta hai.
+    Generates a single transaction. If the real dataset is available,
+    it picks an actual fraud/normal row and sends that (for a better demo).
+    Otherwise it generates synthetic (random) data.
     """
     if force_fraud and _real_fraud_rows:
         base = dict(random.choice(_real_fraud_rows))
@@ -73,7 +71,7 @@ def generate_transaction(force_fraud=False):
 
     transaction = {
         "transaction_id": f"txn_{int(time.time() * 1000)}_{random.randint(1000,9999)}",
-        "user_id": f"user_{random.randint(1, 8)}",  # 8 simulated users taake behavior patterns bane
+        "user_id": f"user_{random.randint(1, 8)}",  # 8 simulated users to create behavior patterns
     }
     transaction.update(base)
     return transaction
@@ -81,32 +79,27 @@ def generate_transaction(force_fraud=False):
 
 def run_producer(interval_seconds=2, fraud_probability=0.1):
     """
-    Har `interval_seconds` mein ek transaction Kafka ko bhejta hai.
-    `fraud_probability` chance hai ke woh transaction suspicious ho.
+    Sends one transaction to Kafka every `interval_seconds`.
+    `fraud_probability` is the chance that a given transaction is suspicious.
     """
     print(f"[PRODUCER] Kafka broker: {KAFKA_BROKER}, Topic: {TOPIC}")
-    print("[PRODUCER] Transaction stream shuru ho rahi hai... (Ctrl+C se rokein)\n")
-
+    print("[PRODUCER] Starting transaction stream... (Ctrl+C to stop)\n")
     count = 0
     try:
         while True:
             is_fraud_like = random.random() < fraud_probability
             txn = generate_transaction(force_fraud=is_fraud_like)
-
             producer.send(TOPIC, value=txn)
             producer.flush()
-
             count += 1
             tag = "[SUSPICIOUS PATTERN]" if is_fraud_like else "[NORMAL]"
             print(f"{count}. Sent {tag} txn_id={txn['transaction_id']} amount={txn['Amount']}")
-
             time.sleep(interval_seconds)
-
     except KeyboardInterrupt:
-        print("\n[PRODUCER] Rok diya gaya. Total transactions sent:", count)
+        print("\n[PRODUCER] Stopped. Total transactions sent:", count)
         producer.close()
 
 
 if __name__ == "__main__":
-    # interval_seconds kam karein taake zyada tez stream simulate ho
+    # Decrease interval_seconds to simulate a faster stream
     run_producer(interval_seconds=2, fraud_probability=0.15)
