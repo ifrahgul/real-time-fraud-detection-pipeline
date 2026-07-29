@@ -11,7 +11,6 @@
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
 ![MLOps](https://img.shields.io/badge/MLOps-Closed%20Loop-purple)
 
-**Tags:** `fraud-detection` `real-time` `streaming` `kafka` `xgboost` `feast` `feature-store` `shap` `explainable-ai` `drift-detection` `fastapi` `redis` `sqlite` `docker` `mlops` `machine-learning`
 
 A closed-loop, streaming fraud detection system for e-commerce and finance —
 transactions are scored in milliseconds as they happen, not hours later in a
