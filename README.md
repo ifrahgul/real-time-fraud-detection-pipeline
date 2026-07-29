@@ -11,6 +11,7 @@
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
 ![MLOps](https://img.shields.io/badge/MLOps-Closed%20Loop-purple)
 
+**Tags:** `fraud-detection` `real-time` `streaming` `kafka` `xgboost` `feast` `feature-store` `shap` `explainable-ai` `drift-detection` `fastapi` `redis` `sqlite` `docker` `mlops` `machine-learning`
 
 A closed-loop, streaming fraud detection system for e-commerce and finance —
 transactions are scored in milliseconds as they happen, not hours later in a
@@ -21,6 +22,35 @@ batch job.
 > the money is already gone. This project scores every transaction as it
 > streams through the system and makes a block/review/allow decision before
 > the customer's next click.
+
+---
+
+## Problem Statement & Motivation
+
+**Real-World Problem:** Fraud happens within seconds on banking and
+e-commerce platforms. Legacy ML models rely on batch processing, meaning
+fraud is often reported hours after it actually occurred. The core challenge
+today is catching fraud within milliseconds on high-throughput transactional
+streaming data — with thousands of transactions arriving per second.
+[[1]](https://cloud.google.com/transform/101-real-world-generative-ai-use-cases-from-industry-leaders)
+[[2]](https://www.linkedin.com/pulse/limits-machine-learning-your-ml-solution-viable-ahmed-fattah)
+[[3]](https://kirannagarkoti.medium.com/why-mastering-traditional-ml-still-matters-in-the-age-of-llms-a130460c5560)
+[[4]](https://medium.com/@aneezashakeel61/building-a-fraud-detection-system-a-real-world-ml-implementation-0c29b4fda06d)
+
+**Project Idea:** Build a live streaming e-commerce fraud detection engine
+that scans every incoming transaction in real time, generates a score within
+sub-second latency, and blocks/reviews/allows the transaction accordingly.
+[[1]](https://medium.com/@nitanshuj138/mlops-the-11-stage-pipeline-that-separates-data-scientists-from-ml-engineers-9410d27ef805)
+[[2]](https://cloud.google.com/transform/101-real-world-generative-ai-use-cases-from-industry-leaders)
+
+**Architecture & Tech:**
+- **Apache Kafka** (or AWS Kinesis) is used for data streaming.
+- **XGBoost** (supervised) is used for model training — an unsupervised
+  anomaly-detection approach like Isolation Forests can also be layered in
+  alongside the hybrid rule-based engine.
+- **Feast (Feature Store)** together with **FastAPI** powers live
+  monitoring and feature serving, ensuring the same feature logic is used
+  for both training and serving.
 
 ---
 
@@ -181,3 +211,8 @@ behind a single endpoint.
   pipeline; SQLite keeps setup to zero extra services. The feedback store
   is isolated behind `feedback.py`, so swapping in Postgres later is a
   contained change.
+
+## License
+
+This project is licensed under the **MIT License** — see [LICENSE](LICENSE)
+for details.
