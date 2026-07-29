@@ -1,21 +1,7 @@
 """
 Step 3b: Kafka Consumer — Real-Time Fraud Scoring
 ====================================================
-Yeh script Kafka topic 'transactions' se continuously transactions
-utha kar humari FastAPI '/predict' endpoint ko call karti hai, aur
-result ke hisaab se decision leti hai (block/review/allow).
 
-Extended: har prediction ab feedback.py ke through log hoti hai
-(transaction_id, features, score, decision) — taake baad mein
-/feedback endpoint se ground-truth label attach ki ja sake aur
-retraining dataset banaya ja sake. user_id aur model latency bhi
-features ke andar log hoti hain taake live dashboard unhe dikha sake.
-
-Chalane se pehle:
-    pip install kafka-python requests
-
-Chalane ka tareeqa (Kafka aur FastAPI dono chalne chahiye):
-    python kafka_consumer.py
 """
 
 import os
@@ -47,8 +33,7 @@ feedback_store = FeedbackStore()
 
 def score_transaction(txn):
     """
-    Transaction ko API ko bhejta hai aur fraud score wapas laata hai.
-    transaction_id aur user_id ko API ko nahi bhejta (model in features
+    Transaction give the trnscatransaction_id aur user_id ko API  (model in features
     ko nahi jaanta, yeh sirf humare rule-engine ke liye hain).
     """
     payload = {k: v for k, v in txn.items() if k not in ("transaction_id", "user_id")}
@@ -63,7 +48,7 @@ def score_transaction(txn):
 
 def hybrid_decision(ml_result, behavior_features):
     """
-    ML score + behavioral rules ko combine karta hai (Step 6 ka
+   combine ML score + behavioral rules (Step 6 ka
     hybrid decision engine architecture).
 
     Rules:
@@ -76,13 +61,13 @@ def hybrid_decision(ml_result, behavior_features):
 
     if ml_score >= 0.9:
         decision = "block"
-        reason = "ML model ne high confidence fraud detect kiya"
+        reason = "ML model show high confidence score "
     elif ml_score >= 0.6:
         decision = "review"
-        reason = "ML model ne medium confidence fraud detect kiya"
+        reason = "ML model detect medium "
     elif rule_flag and ml_score >= 0.3:
         decision = "review"
-        reason = "Behavior suspicious hai (velocity/amount spike) + ML score borderline"
+        reason = "Behavior is suspicious (velocity/amount spike) + ML score borderline"
     else:
         decision = "allow"
         reason = "Normal transaction"
