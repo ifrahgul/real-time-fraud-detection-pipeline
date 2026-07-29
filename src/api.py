@@ -1,9 +1,6 @@
 """
 Step 2: FastAPI Serving Endpoint
 ==================================
-Yeh API trained model (fraud_model.pkl) ko load karti hai aur ek
-/predict endpoint deti hai jahan aap transaction bhej kar turant
-fraud score le sakte hain.
 
 Extended with:
     /explain            -> SHAP-based reason for a given transaction's score
@@ -14,11 +11,6 @@ Extended with:
     /live/transactions     -> recent real-time predictions (for the live dashboard)
     /live/summary          -> aggregate KPIs across all logged predictions
 
-Chalane ka tareeqa (is file ke folder se):
-    uvicorn api:app --reload --port 8000
-
-Test karne ka tareeqa:
-    http://127.0.0.1:8000/docs   (Swagger UI - browser mein khulega)
 """
 
 import os
