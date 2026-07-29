@@ -1,0 +1,20 @@
+
+n
+N
+user_id)Unique identifier for a user / cardholder"user_idJfraud_detection
+ğ«¦Óˆ¨Óúğ«¦Óˆ¨Óú
+F
+&
+__dummy"
+__dummy_idJfraud_detection
+ğ«¦Óˆ¨Óúğ«¦Óˆ¨Óú1"$e6585219-b18f-4e2a-8d61-8a40b653b112*ğ«¦ÓĞº€‘2ú
+Ù
+user_behavior_featuresfraud_detectionuser_id"
+txn_count_5min"
+avg_amount_5min"
+amount_ratio"
+velocity_flag"
+amount_spike_flag2ˆ:event_timestampZ(&../data/user_behavior_features.parquetŠ1feast.infra.offline_stores.file_source.FileSource¢user_behavior_batch_source@Jš	Šfeast.data_source.PushSource¢user_behavior_push_sourceÒZevent_timestampZ(&../data/user_behavior_features.parquet¢user_behavior_batch_sourceb
+user_id
+ğ«¦Óˆ¨Óúğ«¦Óˆ¨Óúb event_timestampZ(&../data/user_behavior_features.parquetŠ1feast.infra.offline_stores.file_source.FileSource¢user_behavior_batch_sourceªfraud_detectionb¬	Šfeast.data_source.PushSource¢user_behavior_push_sourceªfraud_detectionÒZevent_timestampZ(&../data/user_behavior_features.parquet¢user_behavior_batch_sourcez7
+fraud_detection$e0c0d655-3659-4062-be6f-c33f86c8eb44

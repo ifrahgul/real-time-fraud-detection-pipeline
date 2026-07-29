@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+pydantic
+pandas
+numpy
+scikit-learn
+xgboost
+kafka-python
+requests
+redis
+feast[redis]==0.40.1
+shap==0.45.1
